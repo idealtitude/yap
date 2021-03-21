@@ -69,11 +69,12 @@ class DomTree:
                     #for n in range(0, indsz):
                     while tmp_ind >= curind:
                         tmp_ind -= 1
-                        t = tagstack.pop()
-                        tclose = None
-                        if t[1] == 1:
-                            tclose = self.close_tag(t[0], curind)
-                            f.write(tclose)
+                        if len(tagstack) > 0:
+                            t = tagstack.pop()
+                            tclose = None
+                            if t[1] == 1:
+                                tclose = self.close_tag(t[0], curind)
+                                f.write(tclose)
 
                     newtag = (curtag, line['autoclose'])
                     tagstack.append(newtag)
