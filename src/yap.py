@@ -12,6 +12,9 @@ from ycomp.htmldoc import DomTree
 
 __version__ = '0.1'
 
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+
 APP_PATH = os.path.dirname(os.path.realpath(__file__))
 APP_CWD = os.getcwd()
 
@@ -130,6 +133,8 @@ def main(args):
             f_out = f'{APP_CWD}/yap.out.html'
 
         yap_parser(f_in, f_out)
+
+        return EXIT_SUCCESS
 
 
 if __name__ == '__main__':
