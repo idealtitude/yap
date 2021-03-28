@@ -4,11 +4,10 @@
 import sys
 import os
 import re
-from shlex import split as shlex_split
-from collections import deque
 import argparse
 
-from ycomp.htmldoc import DomTree
+import utils.patterns as uptn
+import domtools.domtree as dtree
 
 __version__ = '0.1'
 
@@ -27,101 +26,95 @@ parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__v
 args = parser.parse_args()
 
 
-def yap_parser(input_file, output_file):
-    f = open(input_file, 'r')
-    c = f.read().splitlines()
-    f.close()
+def transpiler(input_file, output_file):
+    fd = open(input_file, 'r')
+    file_content = fd.read().splitlines()
+    fd.close()
 
-    t_empty     = r'^\s*$'
-    t_comment   = r'---.*$'
-    t_indent    = r'(?P<indent>\t+)'
-    t_attrs     = r'(?P<attrname>#|\.|[a-z0-9-]+)(?:`)(?P<attrvalue>.*)(?:`)$'
+    t_empty     = uptn.PATTERNS['t_empty']
+    t_comment   = uptn.PATTERNS['t_comment']
+    t_indent    = uptn.PATTERNS['t_indent']
+    t_attrs     = uptn.PATTERNS['t_attrs']
 
     lineno = 0
-    #indsz = 0
     domstack = []
+    source = ''
 
-    for entry in c:
+    for entry in file_content:
         lineno += 1
 
         if entry == '!5':
-            domstack.append({'doctype': 'html5'})
+            source = '<!DOCTYPE html>'
             continue
 
-        if (m := re.match(t_empty, entry)):
+        if (m := t_empty.match(entry)):
             continue
 
-        if (m := re.match(t_comment, entry)):
+        if (m := t_comment.match(entry)):
             continue
 
-        curind = 0
-        if (m := re.match(t_indent, entry)):
-            curind = len(m.group('indent'))
+        element = dtree.CreateElem(entry)
+        domstack.append(element.elem)
 
-        elem = {
-            'tag': None,
-            'indent': curind,
-            'attrs': [],
-            'text': None,
-            'autoclose': 1
-        }
+    treestack = []
+    indsz = 0
 
-        line = deque(shlex_split(entry))
+    for elem in domstack:
+        node = elem.node
 
-        if line[-1] == ';':
-            line.pop()
-            elem['autoclose'] = 0
+        indent = node['indent']
+        ind = '    ' * indent
+        tag = node['tag']
 
-        tag = line.popleft()
+        attrs = ''
+        if node['attrs'] != None:
+            attrs = node['attrs']
 
-        attrs = []
-        text = None
+        if indent >= indsz:
+            if node['autoclose']:
+                source += f'\n{ind}<{tag}{attrs}>'
+            elif node['content'] != None:
+                source += f'\n{ind}<{tag}{attrs}>{node["content"]}</{tag}>'
+            else:
+                source += f'\n{ind}<{tag}{attrs}>'
+                treestack.append(tag)
+        elif indent < indsz:
+            rng = indsz - indent
+            if rng == 1:
+                t = treestack.pop()
+                source += f'\n{ind}</{t}>'
+            else:
+                tind = '    ' * (len(treestack) - 1)
+                for n in range(rng):
+                    t = treestack.pop()
+                    source += f'\n{tind}</{t}>'
+                    tind = re.sub('^ {4}', '', tind)
 
-        if tag.endswith(':'):
-            tag = tag.replace(':', '')
+            if node['autoclose']:
+                source += f'\n{ind}<{tag}{attrs}>'
+            elif node['content'] != None:
+                source += f'\n{ind}<{tag}{attrs}>{node["content"]}</{tag}>'
+            else:
+                source += f'\n{ind}<{tag}{attrs}>'
+                treestack.append(tag)
+        indsz = indent
 
-            x = 0
-            for i in line:
-                if i == '~':
-                    break
-                if (m := re.match(t_attrs, i)):
-                    atn = m.group('attrname')
-                    atv = m.group('attrvalue')
+    sz = len(treestack)
 
-                    if atn == '#':
-                        atn = 'id'
-                    if atn == '.':
-                        atn = 'class'
+    if sz > 0:
+        tind = '    ' * (sz - 1)
+        for e in range(sz):
+            t = treestack.pop()
+            source += f'\n{tind}</{t}>'
+            tind = re.sub('^ {4}', '', tind)
 
-                    ta = (atn, atv)
-                    attrs.append(ta)
-                    x += 1
-
-            for n in range(0, x):
-                line.popleft()
-
-        elem['tag'] = tag
-
-        if len(attrs) > 0:
-            elem['attrs'] = attrs
-        else:
-            elem['attrs'] = None
-
-        text = ' '.join(line)
-        text = re.sub('^~ ', '', text)
-        if text == '':
-            text = None
-        elem['text'] = text
-
-        domstack.append(elem)
-
-    html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), output_file)
-    dt = DomTree(domstack, html_file)
-    dt.create_doc()
+    #print(source)
+    fd = open(output_file, 'w')
+    fd.write(source)
+    fd.close()
 
 def main(args):
     if args.file:
-        print(type(args.file))
         f_in = None
         if os.path.isfile(args.file[0]):
             f_in = args.file[0]
@@ -132,11 +125,10 @@ def main(args):
         else:
             f_out = f'{APP_CWD}/yap.out.html'
 
-        yap_parser(f_in, f_out)
+        transpiler(f_in, f_out)
 
         return EXIT_SUCCESS
 
 
 if __name__ == '__main__':
     sys.exit(main(args))
-

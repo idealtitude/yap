@@ -6,7 +6,9 @@ Basically, yap files rely on indentation (for the moment the use of tabs (instea
 
 A line has to be written according to the following scheme:
 
+```
 [indention]<tag name>[:] [attributes] [~] [text content] [;]
+```
 
 Example:
 ```yap
