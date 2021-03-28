@@ -71,7 +71,13 @@ class CreateElem:
                 elif atn == '.':
                     atn = 'class'
 
-                tmp = f' {atn}="{atv}"'
+                if atv == '!':
+                    tmp = f' {atn}'
+                elif atv == '?':
+                    tmp = f' {atn}=""'
+                else:
+                    tmp = f' {atn}="{atv}"'
+
                 attrs += tmp
 
         self.entry = self.entry.strip()
