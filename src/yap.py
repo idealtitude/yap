@@ -7,6 +7,7 @@ import re
 import argparse
 
 import utils.patterns as uptn
+from utils.yapconfig import ConfManager
 import domtools.domtree as dtree
 
 __version__ = '0.1'
@@ -21,9 +22,23 @@ parser = argparse.ArgumentParser(prog='yap', description='YAP, Yet Another -html
 
 parser.add_argument('file', nargs=1, help='The yap file to transpile to html')
 parser.add_argument('-o', '--output', nargs='?', help='The destination file to output the html')
+#parser.add_argument('-i', '--indent', nargs=1, type=int, help='The size of indentation for the output html (default: 4 spaces')
+#parser.add_argument('-t', '--type', nargs=1, choices=['tab', 'space'], help='The type of indentation for the output html')
 parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
 
 args = parser.parse_args()
+
+conf = ConfManager(APP_PATH)
+indent_type = conf.config['output']['indent_type']
+indent_size = conf.config['output']['indent_size']
+indentation = None
+if indent_type == 'space':
+    indentation = ' ' * indent_size
+elif indent_type == 'tab':
+    indentation = '\t' * indent_size
+
+SPACES = indentation
+OUTPUT_FLE = f'{APP_CWD}/{conf.config["output"]["output_file"]}'
 
 
 def transpiler(input_file, output_file):
@@ -63,7 +78,7 @@ def transpiler(input_file, output_file):
         node = elem.node
 
         indent = node['indent']
-        ind = '    ' * indent
+        ind = SPACES * indent
         tag = node['tag']
 
         attrs = ''
@@ -84,7 +99,7 @@ def transpiler(input_file, output_file):
                 t = treestack.pop()
                 source += f'\n{ind}</{t}>'
             else:
-                tind = '    ' * (len(treestack) - 1)
+                tind = SPACES * (len(treestack) - 1)
                 for _n in range(rng):
                     t = treestack.pop()
                     source += f'\n{tind}</{t}>'
@@ -102,7 +117,7 @@ def transpiler(input_file, output_file):
     sz = len(treestack)
 
     if sz > 0:
-        tind = '    ' * (sz - 1)
+        tind = SPACES * (sz - 1)
         for _e in range(sz):
             t = treestack.pop()
             source += f'\n{tind}</{t}>'
@@ -123,7 +138,7 @@ def main(args):
         if args.output:
             f_out = args.output
         else:
-            f_out = f'{APP_CWD}/yap.out.html'
+            f_out = OUTPUT_FLE
 
         transpiler(f_in, f_out)
 
