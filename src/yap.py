@@ -33,8 +33,8 @@ def transpiler(input_file, output_file):
 
     t_empty     = uptn.PATTERNS['t_empty']
     t_comment   = uptn.PATTERNS['t_comment']
-    t_indent    = uptn.PATTERNS['t_indent']
-    t_attrs     = uptn.PATTERNS['t_attrs']
+    #t_indent    = uptn.PATTERNS['t_indent']
+    #t_attrs     = uptn.PATTERNS['t_attrs']
 
     lineno = 0
     domstack = []
@@ -47,10 +47,10 @@ def transpiler(input_file, output_file):
             source = '<!DOCTYPE html>'
             continue
 
-        if (m := t_empty.match(entry)):
+        if (_m := t_empty.match(entry)):
             continue
 
-        if (m := t_comment.match(entry)):
+        if (_m := t_comment.match(entry)):
             continue
 
         element = dtree.CreateElem(entry)
@@ -85,7 +85,7 @@ def transpiler(input_file, output_file):
                 source += f'\n{ind}</{t}>'
             else:
                 tind = '    ' * (len(treestack) - 1)
-                for n in range(rng):
+                for _n in range(rng):
                     t = treestack.pop()
                     source += f'\n{tind}</{t}>'
                     tind = re.sub('^ {4}', '', tind)
@@ -103,7 +103,7 @@ def transpiler(input_file, output_file):
 
     if sz > 0:
         tind = '    ' * (sz - 1)
-        for e in range(sz):
+        for _e in range(sz):
             t = treestack.pop()
             source += f'\n{tind}</{t}>'
             tind = re.sub('^ {4}', '', tind)
