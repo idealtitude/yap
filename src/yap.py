@@ -79,8 +79,6 @@ class Yap:
             element = dtree.CreateElem(entry)
             self.domstack.append(element.elem)
 
-        return self.domstack
-
     def transpiler_out(self):
         treestack = []
         indsz = 0
