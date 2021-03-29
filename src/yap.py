@@ -59,7 +59,7 @@ def transpiler(input_file, output_file):
         lineno += 1
 
         if entry == '!5':
-            source = '<!DOCTYPE html>'
+            source = '<!DOCTYPE html>\n'
             continue
 
         if (_m := t_empty.match(entry)):
@@ -87,30 +87,30 @@ def transpiler(input_file, output_file):
 
         if indent >= indsz:
             if node['autoclose']:
-                source += f'\n{ind}<{tag}{attrs}>'
+                source += f'{ind}<{tag}{attrs}>\n'
             elif node['content'] != None:
-                source += f'\n{ind}<{tag}{attrs}>{node["content"]}</{tag}>'
+                source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
             else:
-                source += f'\n{ind}<{tag}{attrs}>'
+                source += f'{ind}<{tag}{attrs}>\n'
                 treestack.append(tag)
         elif indent < indsz:
             rng = indsz - indent
             if rng == 1:
                 t = treestack.pop()
-                source += f'\n{ind}</{t}>'
+                source += f'{ind}</{t}>\n'
             else:
                 tind = SPACES * (len(treestack) - 1)
                 for _n in range(rng):
                     t = treestack.pop()
-                    source += f'\n{tind}</{t}>'
+                    source += f'{tind}</{t}>\n'
                     tind = re.sub('^ {4}', '', tind)
 
             if node['autoclose']:
-                source += f'\n{ind}<{tag}{attrs}>'
+                source += f'{ind}<{tag}{attrs}>\n'
             elif node['content'] != None:
-                source += f'\n{ind}<{tag}{attrs}>{node["content"]}</{tag}>'
+                source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
             else:
-                source += f'\n{ind}<{tag}{attrs}>'
+                source += f'{ind}<{tag}{attrs}>\n'
                 treestack.append(tag)
         indsz = indent
 
@@ -120,7 +120,7 @@ def transpiler(input_file, output_file):
         tind = SPACES * (sz - 1)
         for _e in range(sz):
             t = treestack.pop()
-            source += f'\n{tind}</{t}>'
+            source += f'{tind}</{t}>\n'
             tind = re.sub('^ {4}', '', tind)
 
     #print(source)
