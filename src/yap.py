@@ -5,12 +5,13 @@ import sys
 import os
 import re
 import argparse
+import errno
 
 import utils.patterns as uptn
 from utils.yapconfig import ConfManager
 import domtools.domtree as dtree
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -22,125 +23,141 @@ parser = argparse.ArgumentParser(prog='yap', description='YAP, Yet Another -html
 
 parser.add_argument('file', nargs=1, help='The yap file to transpile to html')
 parser.add_argument('-o', '--output', nargs='?', help='The destination file to output the html')
-#parser.add_argument('-i', '--indent', nargs=1, type=int, help='The size of indentation for the output html (default: 4 spaces')
+#parser.add_argument('-i', '--indent', nargs=1, type=int, help='The size of indentation for the output html (default: 4 self.spaces')
 #parser.add_argument('-t', '--type', nargs=1, choices=['tab', 'space'], help='The type of indentation for the output html')
 parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
 
 args = parser.parse_args()
 
-conf = ConfManager(APP_PATH)
-indent_type = conf.config['output']['indent_type']
-indent_size = conf.config['output']['indent_size']
-indentation = None
-if indent_type == 'space':
-    indentation = ' ' * indent_size
-elif indent_type == 'tab':
-    indentation = '\t' * indent_size
+def get_config():
+    conf = ConfManager(APP_PATH)
+    indent_type = conf.config['output']['indent_type']
+    indent_size = conf.config['output']['indent_size']
+    indentation = None
+    if indent_type == 'space':
+        indentation = ' ' * indent_size
+    elif indent_type == 'tab':
+        indentation = '\t' * indent_size
 
-SPACES = indentation
-OUTPUT_FLE = f'{APP_CWD}/{conf.config["output"]["output_file"]}'
+    return (indentation, f'{APP_CWD}/{conf.config["output"]["output_file"]}')
 
+class Yap:
+    def __init__(self, filein, fileout, indent):
+        self.domstack = []
+        self.source = ''
+        self.input_file = filein
+        self.output_file = fileout
+        self.spaces = indent
 
-def transpiler(input_file, output_file):
-    fd = open(input_file, 'r')
-    file_content = fd.read().splitlines()
-    fd.close()
+    def transpiler_in(self):
+        fd = open(self.input_file, 'r')
+        file_content = fd.read().splitlines()
+        fd.close()
 
-    t_empty     = uptn.PATTERNS['t_empty']
-    t_comment   = uptn.PATTERNS['t_comment']
-    #t_indent    = uptn.PATTERNS['t_indent']
-    #t_attrs     = uptn.PATTERNS['t_attrs']
+        t_empty     = uptn.PATTERNS['t_empty']
+        t_comment   = uptn.PATTERNS['t_comment']
+        #t_indent    = uptn.PATTERNS['t_indent']
+        #t_attrs     = uptn.PATTERNS['t_attrs']
 
-    lineno = 0
-    domstack = []
-    source = ''
+        lineno = 0
+        self.domstack = []
+        #self.source = ''
 
-    for entry in file_content:
-        lineno += 1
+        for entry in file_content:
+            lineno += 1
 
-        if entry == '!5':
-            source = '<!DOCTYPE html>\n'
-            continue
+            if entry == '!5':
+                self.source = '<!DOCTYPE html>\n'
+                continue
 
-        if (_m := t_empty.match(entry)):
-            continue
+            if (_m := t_empty.match(entry)):
+                continue
 
-        if (_m := t_comment.match(entry)):
-            continue
+            if (_m := t_comment.match(entry)):
+                continue
 
-        element = dtree.CreateElem(entry)
-        domstack.append(element.elem)
+            element = dtree.CreateElem(entry)
+            self.domstack.append(element.elem)
 
-    treestack = []
-    indsz = 0
+        return self.domstack
 
-    for elem in domstack:
-        node = elem.node
+    def transpiler_out(self):
+        treestack = []
+        indsz = 0
 
-        indent = node['indent']
-        ind = SPACES * indent
-        tag = node['tag']
+        for elem in self.domstack:
+            node = elem.node
 
-        attrs = ''
-        if node['attrs'] != None:
-            attrs = node['attrs']
+            indent = node['indent']
+            ind = self.spaces * indent
+            tag = node['tag']
 
-        if indent >= indsz:
-            if node['autoclose']:
-                source += f'{ind}<{tag}{attrs}>\n'
-            elif node['content'] != None:
-                source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
-            else:
-                source += f'{ind}<{tag}{attrs}>\n'
-                treestack.append(tag)
-        elif indent < indsz:
-            rng = indsz - indent
-            if rng == 1:
-                t = treestack.pop()
-                source += f'{ind}</{t}>\n'
-            else:
-                tind = SPACES * (len(treestack) - 1)
-                for _n in range(rng):
+            attrs = ''
+            if node['attrs'] != None:
+                attrs = node['attrs']
+
+            if indent >= indsz:
+                if node['autoclose']:
+                    self.source += f'{ind}<{tag}{attrs}>\n'
+                elif node['content'] != None:
+                    self.source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
+                else:
+                    self.source += f'{ind}<{tag}{attrs}>\n'
+                    treestack.append(tag)
+            elif indent < indsz:
+                rng = indsz - indent
+                if rng == 1:
                     t = treestack.pop()
-                    source += f'{tind}</{t}>\n'
-                    tind = re.sub('^ {4}', '', tind)
+                    self.source += f'{ind}</{t}>\n'
+                else:
+                    tind = self.spaces * (len(treestack) - 1)
+                    for _n in range(rng):
+                        t = treestack.pop()
+                        self.source += f'{tind}</{t}>\n'
+                        tind = re.sub('^ {4}', '', tind)
 
-            if node['autoclose']:
-                source += f'{ind}<{tag}{attrs}>\n'
-            elif node['content'] != None:
-                source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
-            else:
-                source += f'{ind}<{tag}{attrs}>\n'
-                treestack.append(tag)
-        indsz = indent
+                if node['autoclose']:
+                    self.source += f'{ind}<{tag}{attrs}>\n'
+                elif node['content'] != None:
+                    self.source += f'{ind}<{tag}{attrs}>{node["content"]}</{tag}>\n'
+                else:
+                    self.source += f'{ind}<{tag}{attrs}>\n'
+                    treestack.append(tag)
+            indsz = indent
 
-    sz = len(treestack)
+        sz = len(treestack)
 
-    if sz > 0:
-        tind = SPACES * (sz - 1)
-        for _e in range(sz):
-            t = treestack.pop()
-            source += f'{tind}</{t}>\n'
-            tind = re.sub('^ {4}', '', tind)
+        if sz > 0:
+            tind = self.spaces * (sz - 1)
+            for _e in range(sz):
+                t = treestack.pop()
+                self.source += f'{tind}</{t}>\n'
+                tind = re.sub('^ {4}', '', tind)
 
-    #print(source)
-    fd = open(output_file, 'w')
-    fd.write(source)
-    fd.close()
+        #print(self.source)
+        fd = open(self.output_file, 'w')
+        fd.write(self.source)
+        fd.close()
 
 def main(args):
     if args.file:
+        config = get_config()
+        indent = config[0]
+        f_out = config[1]
+
         f_in = None
         if os.path.isfile(args.file[0]):
             f_in = args.file[0]
+        else:
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f_in)
 
-        f_out = None
         if args.output:
             f_out = args.output
-        else:
-            f_out = OUTPUT_FLE
 
-        transpiler(f_in, f_out)
+        new_yap = Yap(f_in, f_out, indent)
+
+        new_yap.transpiler_in()
+        new_yap.transpiler_out()
 
         return EXIT_SUCCESS
 
