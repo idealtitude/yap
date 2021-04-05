@@ -1,5 +1,6 @@
 # Personal stuff
 tmp/
+yap.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
