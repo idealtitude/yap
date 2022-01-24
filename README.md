@@ -3,7 +3,9 @@
 **Yet Another -html- Preprocessor**
 
 ---
-### /!\ Currently restarting this project, rewriting it...
+### /!\ Currently restarting this project
+
+It needs to be rewritten properly and pythonicly! This versions is 0.3.0; you can find the previous version in the yap-0.2.0 branch.
 ---
 
 It's just the very begining of this project... I've managed to write the main pieces of the app which is in a very rudimentary state.
