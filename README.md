@@ -1,6 +1,10 @@
 # YAP
 
-**Yet Another -html pre- Preprocessor**
+**Yet Another -html- Preprocessor**
+
+---
+### /!\ Currently restarting this project, rewriting it...
+---
 
 It's just the very begining of this project... I've managed to write the main pieces of the app which is in a very rudimentary state.
 
