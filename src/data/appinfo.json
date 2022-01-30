@@ -1,0 +1,23 @@
+{
+	"name": "yap",
+	"description": "yap is an html preprocessor",
+	"type": "command line interface",
+	"version": "0.3.0",
+	"status": "Development",
+	"licence": "ISC",
+	"languages": {
+		"python": ["3.10"]
+	},
+	"locales": ["en", "fr-FR"],
+	"coding": "utf-8",
+	"author": "idealtitude",
+	"maintener": "idealtitude",
+	"email": "idealtitude@gmail.com",
+	"copyright": "Copyright 2022, idealtitude",
+	"links": {
+		"home": "https://idealtitude.github.io/yap/",
+		"repository": "https://github.com/idealtitude/yap",
+		"documentation": "https://idealtitude.github.io/yap/doc"
+	},
+	"credits": ["idealtitude"]
+}

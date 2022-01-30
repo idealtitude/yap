@@ -9,12 +9,16 @@ of the yap files format) and output a nice html file.
 """
 
 import sys
-import os
-import errno
 
+if sys.version_info < (3, 10, 0):
+    raise RuntimeError("Python 3.10 or later required")
+
+import os
 from typing import Any
 import argparse
 
+#from utils.filehandler import BasicFIle
+from utils.appinit import AppInit
 
 # App infos
 __author__ = "idealtitude"
@@ -24,8 +28,8 @@ __license__ = "ISC"
 # Constants
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
-APP_PATH = os.path.dirname(os.path.realpath(__file__))
-APP_CWD = os.getcwd()
+#APP_PATH = os.path.dirname(os.path.realpath(__file__))
+#APP_CWD = os.getcwd()
 
 # Command line arguments
 def get_args() -> argparse.Namespace:
@@ -54,16 +58,33 @@ def main() -> int:
     args: argparse.Namespace = get_args()
 
     if args.file:
-        file_out: str | None = None
-        file_in: str | None = None
-
-        if os.path.isfile(args.file[0]):
-            file_in = args.file[0]
-        else:
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), file_in)
+        file_out: str = "default"
 
         if args.output:
-            file_out = args.output
+            file_out = args.output[0]
+
+        pathes = {
+            "root": os.path.dirname(os.path.realpath(__file__)),
+            "cwd": os.getcwd(),
+            "home": os.path.expanduser('~'),
+            "input": args.file[0],
+            "output": file_out
+        }
+
+        app = AppInit(pathes)
+
+        if not app.init_ok:
+            print("Error while initializing yap...")
+            return EXIT_FAILURE
+
+        transpiler_data: dict[str, str] = {
+            "input": app.app_pathes["input"],
+            "output": app.app_pathes["output"],
+            "indent": app.settings["output"]["indent_type"],
+            "size": app.settings["output"]["indent_size"]
+        }
+
+        print(f"App intialized with values:\n{transpiler_data}")
 
     return EXIT_SUCCESS
 
