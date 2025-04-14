@@ -67,9 +67,9 @@ Install steps:
 * `cd yap`
 * `make`
 
-### Insatll
+### Install
 If anything went well, you'll now have a binary executable, that you move into a proper location (e.g. `/$HOME/bin` or `$HOME/.local/bin` (for a local "install", but you can also put it in `/usr/bin` to have it system wide, if you prefer) so that you have it your path, then you'll just have to do `yap my_yap_file.yap`.
-or, you can use the `install` target of the Makefile: `make install`; you can define the installation location with `PREFIX='<install dir path>'`, by default the files need by Yap will be installed in `/$HOME/.config/yap` and `/$HOME/.local/share/yap`, the executable will be in that same folder `/$HOME/.local/share/yap` under the name `yap-X.Y.Z` where "X.Y.Z" s the version number.
+or, you can use the `install` target of the Makefile: `make install`; you can define the installation location with `PREFIX='<install dir path>'`, by default the files needed by Yap will be installed in `/$HOME/.config/yap` and `/$HOME/.local/share/yap`, the executable will be in `/$HOME/.local/bin` under the name `yap-X.Y.Z` where "X.Y.Z" s the version number.
 
 ## Usage
 
