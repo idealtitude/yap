@@ -25,10 +25,12 @@ void Args::add_args(const std::string& key, const std::string& value)
 	args_map.insert(std::pair<std::string, std::string>(key, value));
 }
 
+// TODO : better handling of arguments, check for unknown arguments, for missing values for flags, etc.
 // parse_args implementation
+// TODO : inform the user on fails
 void Args::parse_args()
 {
-	std::bitset<6> valid_args; // Adjust to the number of arguments to check!
+	std::bitset<4> valid_args; // Adjust to the number of arguments to check!
 
 	bool map_initialized{false};
 	bool skip_arg{false};
@@ -39,7 +41,7 @@ void Args::parse_args()
 		// Action help
 		if (arg == "-h" ||  arg == "--help")
 		{
-			valid_args[4] = true;
+			valid_args[0] = true;
 			action = "help";
 			break;
 		}
@@ -47,7 +49,7 @@ void Args::parse_args()
 		// Action version
 		if (arg == "-v" ||  arg == "--version")
 		{
-			valid_args[5] = true;
+			valid_args[0] = true;
 			action = "version";
 			break;
 		}
@@ -142,7 +144,7 @@ void Args::parse_args()
 
 			add_args("watch", "on");
 
-			valid_args[1] = true;
+			valid_args[3] = true;
 			//args_counter++;
 			//skip_arg = true;
 			continue;
