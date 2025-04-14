@@ -8,9 +8,10 @@
 #include "files.h"
 #include "init.h"
 
-#define APP_VERSION "0.0.1"
-#define APP_HELP "data/help.txt"
-#define APP_CONF "data/cppps.conf"
+#define APP_VERSION "./VERSION"
+#define APP_HELP "./data/help.txt"
+#define APP_CONF "./data/yap.conf"
+#define APP_PREFS "./data/user_preferences.conf"
 
 void print_help(const std::string& help_message_path)
 {
@@ -37,7 +38,25 @@ void print_help(const std::string& help_message_path)
 
 void print_version()
 {
-   std::cout << APP_VERSION << '\n';
+   File version_file(APP_VERSION, File::Mode::READ);
+
+   bool file_status = version_file.file_status.status_val();
+   std::string status_type = version_file.file_status.status_type();
+
+   if (file_status)
+   {
+	   Logging file_log(version_file.file_status._status);
+
+	   if (status_type == "error" || status_type == "warning")
+	   {
+		   std::cerr << file_log << '\n';
+	   }
+   }
+
+   for (const auto& line: version_file.read_file())
+   {
+	   std::cout << line << '\n';
+   }
 }
 
 int main(int argc, char **argv)
@@ -83,7 +102,7 @@ int main(int argc, char **argv)
 		std::cout << "key: " << key << "\nvalue: " << value << "\n\n";
 	}
 
-	Init init("./data");
+	Init init(APP_CONF);
 
 	if (init.init_status.status_val())
 	{
@@ -97,15 +116,34 @@ int main(int argc, char **argv)
 	}
 
 	std::cout << "Config:\n";
-	for (const auto& [k, v]: init.return_config())
+	for (const auto& section: init.return_config())
 	{
-		std::cout << "k: " << k << ", v: " << v << '\n';
+		std::cout << "section: " << section.first << '\n';
+		for (const auto& [k, v]: section.second)
+		{
+			std::cout << "k: " << k << ", v: " << v << '\n';
+		}
 	}
 
 	std::cout << "\nPrefs:\n";
-	for (const auto& [k, v]: init.return_prefs())
+	for (const auto& section: init.return_prefs())
 	{
-		std::cout << "k: " << k << ", v: " << v << '\n';
+		std::cout << "section: " << section.first << '\n';
+		for (const auto& [k, v]: section.second)
+		{
+			std::cout << "k: " << k << ", v: " << v << '\n';
+		}
+	}
+
+	if (init.init_status.status_val())
+	{
+		Logging init_log(init.init_status._status);
+		std::cout << init_log << '\n';
+
+		if (init.init_status.status_type() == "error")
+		{
+			return 1;
+		}
 	}
 
 	std::cout << "Done\n";

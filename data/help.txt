@@ -1,5 +1,9 @@
-Usage: {{app}} [OPTIONS]...
+Usage: yap [FILE] [OPTIONS]...
 
 Options:
-  -h, --help      Display this help message and exit
+  FILE           The file to transpile
+  -i, --input    Same as above
+  -o, --output   The name of the output file
+  -w, --watch    Watch for change in yap files and transpile them automatically
+  -h, --help     Display this help message and exit
   -v, --version  Display app version and exit

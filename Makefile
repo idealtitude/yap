@@ -11,10 +11,11 @@ OBJDIR=build
 SRCS=$(wildcard $(SRCDIR)/*.cpp)
 OBJS=$(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
 VERSIONNO=$(shell cat ./VERSION)
+PREFIX ?= $(HOME)/.local
 
-BIN=$(BINDIR)/$(BINNAME)-$(VERSION)
+BIN=$(BINDIR)/$(BINNAME)-$(VERSIONNO)
 
-.PHONY: all release version install clean cleanall
+.PHONY: all release version install uninstall clean cleanall
 
 all:$(BIN)
 
@@ -29,16 +30,38 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(BINDIR):
-	mkdir -p $@
+	@mkdir -p $@
 
 version:
 	@echo $(BINNAME) version $(VERSIONNO)
 
 install:
-	@echo Not yet implemented
+	@echo "Creating configuration directories..."
+	@mkdir -p "$(HOME)/.config/yap"
+	@mkdir -p "$(PREFIX)/share/yap"
+	@mkdir -p "$(PREFIX)/bin"
+
+	@echo "Installing configuration files..."
+	@install -D data/yap.conf "$(HOME)/.config/yap/yap.conf"
+	@install -D data/user_preferences.conf "$(PREFIX)/share/yap/user_preferences.conf"
+	@install -D data/help.txt "$(PREFIX)/share/yap/help.txt"
+	@install -D VERSION "$(PREFIX)/share/yap/version.txt"
+
+	@echo "Installing executable..."
+	@install -D bin/yap "$(PREFIX)/bin/yap"
+	@chmod +x "$(PREFIX)/bin/yap"
+
+	@echo "Installation complete!"
+
+uninstall:
+	@echo "Removing installed files and directories..."
+	@rm -rf "$(HOME)/.config/yap"
+	@rm -rf "$(PREFIX)/share/yap"
+	@rm -rf "$(PREFIX)/bin/yap" # Be more specific about removing the bin directory content
+	@echo "Uninstallation complete!"
 
 clean:
 	$(RM) -r $(OBJDIR)

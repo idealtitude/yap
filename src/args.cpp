@@ -52,14 +52,14 @@ void Args::parse_args()
 			break;
 		}
 
-		// Create new project
+		// File positional argument
 		if (args_counter == 0)
 		{
 			valid_args[0] = true;
-			action = "new";
+			action = "file";
 			initialize_map();
 			map_initialized = true;
-			add_args("title", arg);
+			add_args("file", arg);
 			args_counter++;
 		}
 
@@ -71,8 +71,8 @@ void Args::parse_args()
 			continue;
 		}
 
-		// Defining the category
-		if (arg == "-c" ||  arg == "--category")
+		// Input argument
+		if (arg == "-i" ||  arg == "--input")
 		{
 			if (args_counter + 1 < args_input.size())
 			{
@@ -82,7 +82,7 @@ void Args::parse_args()
 					map_initialized = true;
 				}
 
-				add_args("category", args_input.at(args_counter + 1));
+				add_args("input", args_input.at(args_counter + 1));
 			}
 			else
 			{
@@ -92,7 +92,7 @@ void Args::parse_args()
 					map_initialized = true;
 				}
 
-				add_args("category", "undefined");
+				add_args("input", "undefined");
 			}
 
 			valid_args[1] = true;
@@ -101,8 +101,8 @@ void Args::parse_args()
 			continue;
 		}
 
-		// Defining the tags
-		/* if (arg == "-t" ||  arg == "--tags")
+		// Output argument
+		if (arg == "-o" ||  arg == "--output")
 		{
 			if (args_counter + 1 < args_input.size())
 			{
@@ -112,7 +112,7 @@ void Args::parse_args()
 					map_initialized = true;
 				}
 
-				add_args("tags", args_input.at(args_counter + 1));
+				add_args("output", args_input.at(args_counter + 1));
 			}
 			else
 			{
@@ -122,52 +122,31 @@ void Args::parse_args()
 					map_initialized = true;
 				}
 
-				add_args("tags", "undefined");
+				add_args("output", "undefined");
 			}
 
 			valid_args[2] = true;
 			args_counter++;
 			skip_arg = true;
 			continue;
-		} */
+		}
 
-		// Defining the expression to search
-		/* if (arg == "-s" ||  arg == "--search")
+		// Input argument
+		if (arg == "-w" ||  arg == "--watch")
 		{
-			if (action == "new") // Cannot add a note and search for a note!
+			if (!map_initialized)
 			{
-				args_status.set_status(false, "warning", "can not create a note and search notes at the same time");
-				continue;
+				initialize_map();
+				map_initialized = true;
 			}
 
-			action = "search";
+			add_args("watch", "on");
 
-			if (args_counter + 1 < args_input.size())
-			{
-				if (!map_initialized)
-				{
-					initialize_map();
-					map_initialized = true;
-				}
-
-				add_args("expression", args_input.at(args_counter + 1));
-			}
-			else
-			{
-				if (!map_initialized)
-				{
-					initialize_map();
-					map_initialized = true;
-				}
-
-				add_args("expression", "undefined");
-			}
-
-			valid_args[3] = true;
-			args_counter++;
-			skip_arg = true;
+			valid_args[1] = true;
+			//args_counter++;
+			//skip_arg = true;
 			continue;
-		} */
+		}
 	}
 
 	// Final arguments parsing check

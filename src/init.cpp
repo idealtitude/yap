@@ -3,66 +3,54 @@
 Init::Init(const std::string& confp):
     config_path(confp), _config(), _prefs()
 {
-    get_config();
+    parse_files(config_path, 0);
+
+	if (!init_status.status_val())
+	{
+		parse_files(_config["paths"]["user_prefs"], 1);
+	}
 }
 
-std::unordered_map<std::string, std::string> Init::return_config() const
+Umap Init::return_config() const
 {
     return _config;
 }
 
-std::unordered_map<std::string, std::string> Init::return_prefs() const
+Umap Init::return_prefs() const
 {
     return _prefs;
 }
 
-bool Init::dir_exists(const std::string& dir_path)
+void Init::parse_files(const std::string& file, int curmap)
 {
-    fs::path _path{std::string(dir_path)};
-    fs::directory_entry _dir{_path};
+	std::regex section_ptn{R"(^\[([a-z0-9_]+)\]$)"};
+	std::regex keyval_ptn{R"(^([a-z0-9_]+) ?= ?\"([^"]+)\"$)"};
+	std::smatch _m;
+	std::string current_section;
+	Umap& current_map = (curmap == 0) ? _config : _prefs;
 
-    if (!_dir.exists())
-    {
-        return false;
-    }
+	File current_file(file, File::Mode::READ);
 
-    return true;
-}
+	std::vector<std::string> current_file_content = current_file.read_file();
 
-void Init::get_config()
-{
-    if (!dir_exists(config_path))
-    {
-        std::string errmsg = "configuration directory has not been found!\nExpected location: " + config_path + "; check the installation or provide another path (see doc/doc.md and/or see the help (with the -h flag) for more information)";
-        init_status.set_status(true, "error", errmsg);
-        return;
-    }
-
-    _config.insert({"help", std::string(config_path).append("/help.txt")});
-    _config.insert({"version", std::string(config_path).append("/version.txt")});
-    _config.insert({"prefs", std::string(config_path).append("/cppps.conf")});
-
-    parse_prefs();
-}
-
-void Init::parse_prefs()
-{
-	File prefs_file(_config["prefs"], File::Mode::READ);
-	std::vector<std::string> prefs_content = prefs_file.read_file();
-
-	if (prefs_file.file_status.status_type() != "error")
+	if (current_file.file_status.status_type() != "error")
 	{
-        std::regex prefs_ptn{R"(^([a-z0-9_]+)=\"(.*)\"$)"};
-        std::smatch _m;
-
-		for (const std::string& line: prefs_content)
+       for (const std::string& line: current_file_content)
 		{
 			if (line.starts_with("#"))
 			{
 				// Skipping comments
 				continue;
 			}
-			if (std::regex_search(line, _m, prefs_ptn))
+
+			if (std::regex_search(line, _m, section_ptn))
+			{
+				current_section = _m[1];
+				current_map[current_section] = {};
+				continue;
+			}
+
+			if (std::regex_search(line, _m, keyval_ptn))
             {
                 if (_m.size() < 3) // ignore ill formated lines
                 {
@@ -71,13 +59,15 @@ void Init::parse_prefs()
                     continue;
                 }
 
-                _prefs.insert({std::string(_m[1]), std::string(_m[2])});
+                std::string key = _m[1];
+				std::string val = _m[2];
+				current_map[current_section][key] = val;
             }
 		}
 	}
 	else
 	{
 		// TODO: use copy constructor?
-		init_status.set_status(true, prefs_file.file_status.status_type(), prefs_file.file_status.status_msg());
+		init_status.set_status(true, current_file.file_status.status_type(), current_file.file_status.status_msg());
 	}
 }

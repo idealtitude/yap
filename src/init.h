@@ -2,6 +2,7 @@
 #define INIT_H
 
 #include <unordered_map>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <filesystem>
@@ -12,6 +13,8 @@
 
 namespace fs = std::filesystem;
 
+using Umap = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+
 class Init
 {
   public:
@@ -20,6 +23,7 @@ class Init
 	 * @brief this constructor take a path to the configuration file
 	 *
 	 * @param confp A string containing the path to the configuration file (std::string)
+	 * @return an instance of Init
 	 */
 	Init(const std::string& confp);
 	~Init() = default;
@@ -28,19 +32,19 @@ class Init
     Status init_status;
 
     //Methods
-    std::unordered_map<std::string, std::string> return_config() const;
-    std::unordered_map<std::string, std::string> return_prefs() const;
+    Umap return_config() const;
+    Umap return_prefs() const;
 
   private:
     // Attributes
     std::string config_path;
-    std::unordered_map<std::string, std::string> _config;
-    std::unordered_map<std::string, std::string> _prefs;
+    Umap _config;
+    Umap _prefs;
 
     //Methods
-    bool dir_exists(const std::string& dir_path);
-    void get_config();
-    void parse_prefs();
+    //bool dir_exists(const std::string& dir_path);
+    //void get_config();
+    void parse_files(const std::string& file, int curmap);
 };
 
 #endif // INIT_H
