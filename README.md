@@ -2,7 +2,7 @@
 
 **yap** stands for "Yet Another Preprocessor", and a HTML preprocessor in this case. **Important:** yap is under development, and not ready to use (I'll update this notice when it's ready to use).
 
-![Yap Logo](./icons/yap_log-512x512.png)
+![Yap Logo](./yap_logo-512x512.png)
 
 ## Presentation
 
