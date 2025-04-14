@@ -23,22 +23,22 @@ Also I intend to add a feature to programmatically generate contents (for exampl
 
 **Important:** yap only supports HTML 5 markup!
 
-Here is a complete example of a yap file:
+Below is a basic example of a Yap file; **note:** to avoid ambiguity, the extension of Yap files is `.yaps` (for "yap source"), as the extensions `.yp`, `yap`, and other variants are already used for other purposes by other softwares.
 
-```yap
+```yaps
 !5 -- doctype html 5, can be omiited for the moment as html 5 is the only supported version of html
 html
     head
         meta: charset utf-8
         title (Page Title)
         meta: name viewport, content "width=device-width, initial-scale=1.0"
-    body: class regular
+    body: class regular -- or .regular
         div: id global
-            header: class myheader
-                h1: class myh1
-                    span: class icon-home
+            header: class myheader -- or #myheader
+                h1: .myh1
+                    span: .icon-home
                     a: title "Got to Home page", href ./index.html (My Website)
-            nav: class navigation
+            nav: .navigation
                 ul
                     li
                         a: href ./index.html (Home)
